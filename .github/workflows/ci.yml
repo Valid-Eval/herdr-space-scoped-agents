@@ -9,12 +9,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: "stable"
       - run: go vet ./...
       - run: go build ./...
+      - run: go test ./...
       - name: Cross-compile check (all targets)
         run: |
           set -euo pipefail
@@ -23,3 +24,35 @@ jobs:
             echo "== $os/$arch =="
             GOOS="$os" GOARCH="$arch" CGO_ENABLED=0 go build -o /dev/null .
           done
+
+  # Runs the same install-time build step `herdr plugin install` runs, on each
+  # platform, and checks the binary reports the manifest's version.
+  install-script:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: "stable"
+      - name: build.sh (linux, macos)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sh scripts/build.sh
+          want="$(sed -n 's/^version *= *"\([^"]*\)".*/\1/p' herdr-plugin.toml | head -n1)"
+          got="$(bin/herdr-space-scoped-agents version)"
+          [ "$got" = "$want" ] || { echo "binary reports $got, manifest says $want" >&2; exit 1; }
+      - name: build.ps1 (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $want = (Select-String -Path herdr-plugin.toml -Pattern '^version\s*=\s*"([^"]*)"').Matches[0].Groups[1].Value
+          $got = (& bin/herdr-space-scoped-agents.exe version).Trim()
+          if ($got -ne $want) { Write-Error "binary reports $got, manifest says $want"; exit 1 }

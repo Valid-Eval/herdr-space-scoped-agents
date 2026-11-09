@@ -54,7 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * honor XDG_CONFIG_HOME in the socket-path fallback (eaf29a8)
 
-## [0.2.1] - 2026-07-22
+## 0.2.1 - 2026-07-22
 
 ### Added
 - This changelog.
@@ -65,7 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   deprecation warnings).
 - Build on the latest stable Go; `go.mod` now targets Go 1.26.
 
-## [0.2.0] - 2026-07-22
+## 0.2.0 - 2026-07-22
 
 Initial public release.
 

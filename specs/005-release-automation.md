@@ -1,7 +1,10 @@
 # 005 — Release automation
 
-> **Partly superseded by [006](006-build-from-source.md):** releases no longer
-> build or attach binaries. The release-please flow below still applies.
+> **Partly superseded by [006](006-build-from-source.md).** Releases no longer
+> build or attach binaries, and installs no longer derive a download URL from
+> the manifest version. Everything below about building, uploading or verifying
+> release assets is historical. What still applies: release-please maintains the
+> release PR and bumps `CHANGELOG.md`, `herdr-plugin.toml` and the tag together.
 
 ## Context
 

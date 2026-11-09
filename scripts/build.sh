@@ -3,9 +3,10 @@
 # cwd = plugin root).
 #
 # Builds the binary from source with `go`. There is deliberately no prebuilt
-# download: the binary is always compiled from the code you installed, so
-# nothing is fetched from a GitHub release at install time (see
-# specs/006-build-from-source.md).
+# download: the binary is always compiled from the code you installed (see
+# specs/006-build-from-source.md). The only network access is Go fetching the
+# modules in go.mod, which it checks against go.sum. GOTOOLCHAIN=local stops Go
+# from downloading a newer toolchain; an older Go fails with a clear error.
 set -eu
 
 BIN="herdr-space-scoped-agents"
@@ -24,5 +25,5 @@ command -v go >/dev/null 2>&1 || {
 
 mkdir -p "$root/bin"
 echo "building $BIN v${version} from source with go..." >&2
-( cd "$root" && go build -trimpath -ldflags "-s -w -X main.version=${version}" -o "$out" . )
+( cd "$root" && GOTOOLCHAIN=local go build -trimpath -ldflags "-s -w -X main.version=${version}" -o "$out" . )
 echo "built -> $out" >&2

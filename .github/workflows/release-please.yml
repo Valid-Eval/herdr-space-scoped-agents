@@ -17,5 +17,5 @@ jobs:
       # GitHub release. No binaries are attached: installs build from source
       # (specs/006-build-from-source.md).
       # Config: release-please-config.json + manifest.
-      - uses: googleapis/release-please-action@v5
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         id: release

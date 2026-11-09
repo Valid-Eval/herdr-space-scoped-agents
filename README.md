@@ -238,7 +238,8 @@ discretion. The source is small: one Go program plus the manifest and install
 scripts. It uses only the Go standard library (and go-winio on Windows), makes
 no network calls at runtime, and only talks to your local herdr API socket to
 set/clear the agent-panel view. The install scripts only run `go build` on the
-source you installed; they download nothing.
+source you installed. The only download is Go fetching the modules in `go.mod`,
+checked against `go.sum`; they never download a binary or a Go toolchain.
 
 ## License
 

@@ -18,9 +18,14 @@ context, so the code that runs has to be the code that was reviewed.
 ## Decision
 
 - `[[build]]` runs `scripts/build.sh` (unix) or `scripts/build.ps1` (Windows),
-  which only run `go build`. Nothing is fetched at install time.
+  which only run `go build`. No binary is fetched at install time. Go still
+  fetches the modules in `go.mod` from the module proxy and checks them against
+  `go.sum`, and the scripts set `GOTOOLCHAIN=local` so Go never downloads a
+  toolchain.
 - Go 1.26+ is a hard requirement for installing; the scripts fail with a clear
-  error when it's missing.
+  error when it's missing, and Go itself refuses an older version.
+- CI runs both scripts on Linux, macOS and Windows and checks the binary reports
+  the manifest's version, since nothing else exercises them before install.
 - Releases are still cut by release-please for versioning and the changelog,
   but no binaries are attached (005's build-and-upload step is removed).
 - The Go module path is the bare `herdr-space-scoped-agents`, so the source no
