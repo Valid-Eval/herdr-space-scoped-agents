@@ -24,8 +24,10 @@ context, so the code that runs has to be the code that was reviewed.
   toolchain.
 - Go 1.26+ is a hard requirement for installing; the scripts fail with a clear
   error when it's missing, and Go itself refuses an older version.
-- CI runs both scripts on Linux, macOS and Windows and checks the binary reports
-  the manifest's version, since nothing else exercises them before install.
+- CI runs `build.sh` on Linux and macOS and `build.ps1` on Windows, with
+  `HERDR_PLUGIN_ROOT` set as Herdr sets it. It checks the binary reports the
+  manifest's version and that a missing Go fails with a clear error, since
+  nothing else exercises the scripts before install.
 - Releases are still cut by release-please for versioning and the changelog,
   but no binaries are attached (005's build-and-upload step is removed).
 - The Go module path is the bare `herdr-space-scoped-agents`, so the source no
