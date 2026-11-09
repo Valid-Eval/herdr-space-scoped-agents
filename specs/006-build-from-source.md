@@ -26,8 +26,11 @@ context, so the code that runs has to be the code that was reviewed.
   error when it's missing, and Go itself refuses an older version.
 - CI runs `build.sh` on Linux and macOS and `build.ps1` on Windows, with
   `HERDR_PLUGIN_ROOT` set as Herdr sets it. It checks the binary reports the
-  manifest's version and that a missing Go fails with a clear error, since
-  nothing else exercises the scripts before install.
+  manifest's version plus the short commit SHA, and that a missing Go fails
+  with a clear error, since nothing else exercises the scripts before install.
+- The version is stamped as `<manifest version>+<short sha>` (for example
+  `0.6.0+892cdd6`) when the plugin root is itself a git checkout, so a box's build can
+  be matched to a commit; otherwise it's the manifest version alone.
 - Releases are still cut by release-please for versioning and the changelog,
   but no binaries are attached (005's build-and-upload step is removed).
 - The Go module path is the bare `herdr-space-scoped-agents`, so the source no

@@ -23,6 +23,13 @@ command -v go >/dev/null 2>&1 || {
   exit 1
 }
 
+# Append the commit, e.g. 0.6.0+892cdd6, so a box's build can be matched to
+# git. Skipped unless the plugin root is itself a git checkout, so a plugin
+# dir that merely sits inside another repo (e.g. dotfiles) isn't mislabeled.
+if [ -e "$root/.git" ] && sha="$(git -C "$root" rev-parse --short HEAD 2>/dev/null)"; then
+  version="${version}+${sha}"
+fi
+
 mkdir -p "$root/bin"
 echo "building $BIN v${version} from source with go..." >&2
 ( cd "$root" && GOTOOLCHAIN=local go build -trimpath -ldflags "-s -w -X main.version=${version}" -o "$out" . )

@@ -113,14 +113,28 @@ On install, herdr runs the manifest's build step, `scripts/build.sh`
 from the code you installed. If Go isn't on your `PATH`, install fails with a
 clear error.
 
+If the plugin is already linked from a local checkout (`herdr plugin link`),
+`herdr plugin install` refuses with "already linked from a local path". Unlink
+it first:
+
+```bash
+herdr plugin unlink herdr-space-scoped-agents
+herdr plugin install <owner>/herdr-space-scoped-agents --ref deploy
+```
+
 The filter applies automatically the first time you focus a space after install.
 To apply it immediately, invoke the `current` action (below).
 
-**Update** by reinstalling:
+**Update** a GitHub install with `herdr plugin update`, or reinstall:
 
 ```bash
+herdr plugin update
 herdr plugin uninstall herdr-space-scoped-agents && herdr plugin install <owner>/herdr-space-scoped-agents --ref deploy
 ```
+
+`herdr-space-scoped-agents version` prints the manifest version plus the git
+commit it was built from, for example `0.6.0+892cdd6`, so you can check which
+commit a box is running.
 
 ## Actions
 
@@ -201,12 +215,14 @@ Requires [Go](https://go.dev) 1.26+.
 ```bash
 git clone https://github.com/<owner>/herdr-space-scoped-agents
 cd herdr-space-scoped-agents
-go build -o bin/herdr-space-scoped-agents .   # .exe on Windows
+sh scripts/build.sh          # Windows: powershell -File scripts/build.ps1
 herdr plugin link .
 ```
 
 `herdr plugin link` does not run the install build step, so build the binary
 into `bin/` yourself as above. The manifest launches `bin/herdr-space-scoped-agents`.
+A plain `go build -o bin/herdr-space-scoped-agents .` also works, but the binary
+then reports its version as `dev`.
 
 Cross-compile any target with `GOOS`/`GOARCH`, e.g.:
 

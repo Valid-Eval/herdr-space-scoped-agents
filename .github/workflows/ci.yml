@@ -2,7 +2,7 @@ name: ci
 
 on:
   push:
-    branches: [main]
+    branches: [main, deploy]
   pull_request:
 
 permissions:
@@ -33,7 +33,8 @@ jobs:
   # Runs the install-time build step on each platform the way `herdr plugin
   # install` does (HERDR_PLUGIN_ROOT set; on Windows with the \\?\ prefix Herdr
   # may add). build.sh runs on Linux and macOS, build.ps1 on Windows. Checks the
-  # binary reports the manifest's version, and that a missing Go fails cleanly.
+  # binary reports the manifest's version plus the commit, and that a missing
+  # Go fails cleanly.
   install-script:
     strategy:
       fail-fast: false
@@ -73,8 +74,9 @@ jobs:
           [ ! -e bin/herdr-space-scoped-agents ]
           sh scripts/build.sh
           want="$(sed -n 's/^version *= *"\([^"]*\)".*/\1/p' herdr-plugin.toml | head -n1)"
+          want="$want+$(git rev-parse --short HEAD)"
           got="$(bin/herdr-space-scoped-agents version)"
-          [ "$got" = "$want" ] || { echo "binary reports $got, manifest says $want" >&2; exit 1; }
+          [ "$got" = "$want" ] || { echo "binary reports $got, expected $want" >&2; exit 1; }
       - name: build.ps1 (windows)
         if: runner.os == 'Windows'
         shell: pwsh
@@ -92,5 +94,6 @@ jobs:
           powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $want = (Select-String -Path herdr-plugin.toml -Pattern '^version\s*=\s*"([^"]*)"').Matches[0].Groups[1].Value
+          $want = "$want+$((& git rev-parse --short HEAD).Trim())"
           $got = (& bin/herdr-space-scoped-agents.exe version).Trim()
-          if ($got -ne $want) { Write-Error "binary reports $got, manifest says $want"; exit 1 }
+          if ($got -ne $want) { Write-Error "binary reports $got, expected $want"; exit 1 }

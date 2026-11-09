@@ -23,6 +23,14 @@ if (-not (Get-Command go -ErrorAction SilentlyContinue)) {
   Write-Error "Go is required to build $bin (https://go.dev/dl/)"
 }
 
+# Append the commit, e.g. 0.6.0+892cdd6, so a box's build can be matched to
+# git. Skipped unless the plugin root is itself a git checkout, so a plugin
+# dir that merely sits inside another repo (e.g. dotfiles) isn't mislabeled.
+if ((Test-Path (Join-Path $root '.git')) -and (Get-Command git -ErrorAction SilentlyContinue)) {
+  $sha = (& git -C $root rev-parse --short HEAD 2>$null)
+  if ($LASTEXITCODE -eq 0 -and $sha) { $version = "$version+$($sha.Trim())" }
+}
+
 $binDir = Join-Path $root 'bin'
 New-Item -ItemType Directory -Force -Path $binDir | Out-Null
 $out = Join-Path $binDir "$bin.exe"
