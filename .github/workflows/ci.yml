@@ -59,16 +59,16 @@ jobs:
           HERDR_PLUGIN_ROOT: ${{ github.workspace }}
         run: |
           set -euo pipefail
-          # Without Go on PATH the script must fail with a clear message.
-          if PATH=/usr/bin:/bin command -v go >/dev/null; then
-            echo "::notice::go found in /usr/bin or /bin; skipping the missing-Go check"
-          else
-            if PATH=/usr/bin:/bin sh scripts/build.sh 2>err.txt; then
-              echo "build.sh succeeded without Go" >&2; exit 1
-            fi
-            grep -q 'Go is required' err.txt
-            [ ! -e bin/herdr-space-scoped-agents ]
+          # Without Go on PATH the script must fail with a clear message. Some
+          # runner images ship go in /usr/bin, so give the script a PATH holding
+          # only the tools it needs before the Go check.
+          nogo="$RUNNER_TEMP/nogo"; mkdir -p "$nogo"
+          for t in sed head dirname; do ln -sf "$(command -v "$t")" "$nogo/$t"; done
+          if PATH="$nogo" /bin/sh scripts/build.sh 2>err.txt; then
+            echo "build.sh succeeded without Go" >&2; exit 1
           fi
+          grep -q 'Go is required' err.txt
+          [ ! -e bin/herdr-space-scoped-agents ]
           sh scripts/build.sh
           want="$(sed -n 's/^version *= *"\([^"]*\)".*/\1/p' herdr-plugin.toml | head -n1)"
           got="$(bin/herdr-space-scoped-agents version)"
