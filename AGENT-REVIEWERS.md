@@ -787,6 +787,43 @@ This reviewer applies to:
 - The verbose text (or a description of the structural issue).
 - A terse / better-structured replacement.
 - Brief reason (optional, only if not obvious).
+
+## install-time-supply-chain-reviewer
+
+Flag anything that fetches, executes, or trusts external code at install or run time: network calls, `curl` / `Invoke-WebRequest`, `go install` / `go get` of unpinned tools, new or changed `[[build]]` commands in `herdr-plugin.toml`, new `go.mod` dependencies or non-Valid-Eval module sources, and GitHub Actions pinned by tag instead of commit SHA. Flag any reintroduction of prebuilt-binary downloads (see `specs/006-build-from-source.md`). This plugin runs with access to the Herdr API socket and every agent pane, and Valid-Eval policy requires tools to be screened for supply-chain risk.
+
+<!-- Proposed during install-template setup; rationale: build.sh/build.ps1 run at `herdr plugin install`; spec 006 removed upstream downloads; go.mod pulls go-winio and x/sys; workflows use tag-pinned actions and the release workflow has contents: write. -->
+
+## plugin-manifest-parity-reviewer
+
+Review `herdr-plugin.toml`. Every `[[startup]]`, `[[events]]` and `[[actions]]` block exists once for linux/macos (sh) and once for windows (powershell). Flag changes where the two drift apart (an event or action added for one platform only, different arguments), action ids that collide or lack the `-windows` suffix (Herdr rejects duplicate ids regardless of platform gating), Windows commands that stop launching the binary by absolute path via `$HERDR_PLUGIN_ROOT`, and a `version` line that loses its `# x-release-please-version` marker.
+
+<!-- Proposed during install-template setup; rationale: The manifest duplicates every block per platform and its header documents the duplicate-id rule; release-please-config.json depends on the version marker. -->
+
+## build-script-parity-reviewer
+
+Check that `scripts/build.sh` and `scripts/build.ps1` stay behaviorally equivalent: the same version extraction from `herdr-plugin.toml`, the same `go build` flags (`-trimpath`, `-ldflags "-s -w -X main.version=..."`), the same output path under `bin/`, the same clear failure when Go is missing or the build fails, and the Windows `\\?\` verbatim-prefix handling. Flag a change to one script that isn't mirrored in the other, and version-parsing regexes that would break if the manifest's `version` line format changes. CI never executes either script, so drift is invisible to the Go tests.
+
+<!-- Proposed during install-template setup; rationale: The two scripts re-implement the same logic in sh (sed) and PowerShell (Select-String); ci.yml only runs go build. -->
+
+## docs-spec-consistency-reviewer
+
+Flag PRs that change distribution, install, modes, actions, keybindings or platform behavior without updating `README.md`, the relevant `specs/NNN-*.md` decision doc, the `specs/README.md` index (including superseded markers), and the header comments in `herdr-plugin.toml`. Flag stale references to upstream repositories, prebuilt downloads or GitHub release assets.
+
+<!-- Proposed during install-template setup; rationale: specs/ holds numbered decision docs (003 superseded by 006); README and manifest header restate the build-from-source rule; history shows repeated doc sweeps. -->
+
+## herdr-ipc-contract-reviewer
+
+Review changes to the Herdr API calls in `main.go` and the transports in `ipc_unix.go` / `ipc_windows.go`. Flag changes to the `agent.view.set` / `agent.view.clear` request shapes, filter ops (`eq`, `in`) and context tokens (`current_workspace_id`), the sort token shared with herdr-agent-quota (`aq_sort`), or the socket-path resolution order (`HERDR_SOCKET_PATH`, then `XDG_CONFIG_HOME`, then the default) that assume API behavior `min_herdr_version` does not guarantee. Flag unix and windows dial paths that diverge in timeout or error semantics. There is no API schema to compile against, so contract drift only shows up at runtime.
+
+<!-- Proposed during install-template setup; rationale: main.go hand-builds filter JSON and hardcodes aq_sort; the transport is split by build tag; commit eaf29a8 fixed the socket-path fallback. -->
+
+## persisted-mode-state-reviewer
+
+Review the persisted mode (`current` / `machine` / `all`) and the sync/toggle state machine. Check that state-dir resolution (`HERDR_PLUGIN_STATE_DIR`, then `HERDR_PLUGIN_CONFIG_DIR`) is safe, that the state file is written atomically with sane permissions, that a missing or invalid state file falls back to a sane mode, that transitions stay idempotent when several hook-spawned `sync` processes run alongside a manual action, and that machine mode refreshes its workspace-id list.
+
+<!-- Proposed during install-template setup; rationale: Every workspace.focused/created/closed event spawns a fresh `sync` process that can race manual actions writing the same file; the README promises modes persist across restarts. -->
+
 # Guidelines
 
 A reviewer pack for Go projects. Each section below is an independent reviewer prompt with its own scope, set of patterns to flag, and disposition.
