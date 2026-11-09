@@ -1,5 +1,8 @@
 # 005 — Release automation
 
+> **Partly superseded by [006](006-build-from-source.md):** releases no longer
+> build or attach binaries. The release-please flow below still applies.
+
 ## Context
 
 The plugin's version lives in `herdr-plugin.toml`, and the install script derives

@@ -1,8 +1,8 @@
 # herdr-space-scoped-agents
 
-[![ci](https://github.com/ShankyJS/herdr-space-scoped-agents/actions/workflows/ci.yml/badge.svg)](https://github.com/ShankyJS/herdr-space-scoped-agents/actions/workflows/ci.yml)
-[![release](https://img.shields.io/github/v/release/ShankyJS/herdr-space-scoped-agents)](https://github.com/ShankyJS/herdr-space-scoped-agents/releases/latest)
-[![license](https://img.shields.io/github/license/ShankyJS/herdr-space-scoped-agents)](LICENSE)
+License: [MIT](LICENSE). Originally written by Jhan Silva; this fork builds
+from source only and has no runtime or install-time dependency on the original
+repository.
 
 <p align="center">
   <a href="#how-it-works">how it works</a> · <a href="#install">install</a> · <a href="#actions">actions</a> · <a href="#windows">windows</a> · <a href="#limitations">limitations</a> · <a href="#build-from-source">build</a> · <a href="specs/">specs</a>
@@ -99,19 +99,19 @@ environment variable herdr injects into every plugin command.
 
 ## Install
 
+Requires [Go](https://go.dev) 1.26+. Install from the GitHub repo you trust,
+pinned to the branch or tag you reviewed:
+
 ```bash
-herdr plugin install ShankyJS/herdr-space-scoped-agents
+herdr plugin install <owner>/herdr-space-scoped-agents --ref deploy
 herdr plugin list
 ```
 
-On install, herdr runs a build step that **downloads the prebuilt binary for
-your platform** from the matching [GitHub Release](https://github.com/ShankyJS/herdr-space-scoped-agents/releases)
-and **verifies its SHA-256**. No toolchain required. If no prebuilt exists for
-your platform/version, it falls back to building from source with `go` (see
-[Build from source](#build-from-source)).
-
-Prebuilt targets: macOS (arm64, x86-64), Linux (arm64, x86-64), Windows
-(arm64, x86-64).
+On install, herdr runs the manifest's build step, `scripts/build.sh`
+(`scripts/build.ps1` on Windows), which **compiles the binary from source** with
+`go build`. Nothing is downloaded from a GitHub release: the binary always comes
+from the code you installed. If Go isn't on your `PATH`, install fails with a
+clear error.
 
 The filter applies automatically the first time you focus a space after install.
 To apply it immediately, invoke the `current` action (below).
@@ -119,7 +119,7 @@ To apply it immediately, invoke the `current` action (below).
 **Update** by reinstalling:
 
 ```bash
-herdr plugin uninstall herdr-space-scoped-agents && herdr plugin install ShankyJS/herdr-space-scoped-agents
+herdr plugin uninstall herdr-space-scoped-agents && herdr plugin install <owner>/herdr-space-scoped-agents --ref deploy
 ```
 
 ## Actions
@@ -199,7 +199,7 @@ plugin's verified findings):
 Requires [Go](https://go.dev) 1.26+.
 
 ```bash
-git clone https://github.com/ShankyJS/herdr-space-scoped-agents
+git clone https://github.com/<owner>/herdr-space-scoped-agents
 cd herdr-space-scoped-agents
 go build -o bin/herdr-space-scoped-agents .   # .exe on Windows
 herdr plugin link .
@@ -220,9 +220,9 @@ Releases are automated with [release-please](https://github.com/googleapis/relea
 Write [Conventional Commits](https://www.conventionalcommits.org/) on `main`
 (`fix:` → patch, `feat:` → minor, `feat!:`/`BREAKING CHANGE` → major). release-please
 maintains a **release PR** that bumps the version (in `CHANGELOG.md` and
-`herdr-plugin.toml`) from those commits. Merging that PR tags the version,
-creates the GitHub release, and builds + uploads the binaries — no manual
-version, changelog, or tag steps.
+`herdr-plugin.toml`) from those commits. Merging that PR tags the version and
+creates the GitHub release — no manual version, changelog, or tag steps. No
+binaries are attached to releases; installs always build from source.
 
 ## Design & decisions
 
@@ -237,8 +237,8 @@ herdr plugin listings are discovered automatically from the GitHub topic
 discretion. The source is small: one Go program plus the manifest and install
 scripts. It uses only the Go standard library (and go-winio on Windows), makes
 no network calls at runtime, and only talks to your local herdr API socket to
-set/clear the agent-panel view. The install scripts download a checksum-verified
-release binary.
+set/clear the agent-panel view. The install scripts only run `go build` on the
+source you installed; they download nothing.
 
 ## License
 
